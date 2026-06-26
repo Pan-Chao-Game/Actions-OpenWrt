@@ -1,20 +1,23 @@
 #!/bin/bash
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: diy-part2.sh
-# Description: OpenWrt DIY script part 2 (After Update feeds)
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
+cat > package/base-files/files/etc/uci-defaults/99-auto-setup << EOF
+#!/bin/sh
+echo "root:xxoo1314." | chpasswd
+uci set system.@system[0].hostname='FPGAPC'
+uci commit system
 
-# Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+uci set network.lan.ipaddr='192.168.8.8'
+uci set network.lan.netmask='255.255.255.0'
+uci set dhcp.lan.start='100'
+uci set dhcp.lan.limit='150'
+uci set dhcp.lan.local='/lan/'
 
-# Modify default theme
-#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+uci set luci.main.mediaurlbase='/luci-static/argon'
+uci commit luci
 
-# Modify hostname
-#sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
+uci commit network
+uci commit dhcp
+
+/etc/init.d/dnsmasq restart
+/etc/init.d/network reload
+EOF
+chmod 755 package/base-files/files/etc/uci-defaults/99-auto-setup
